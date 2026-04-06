@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PhishVision AI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 340px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #ffffff;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .header img { width: 36px; height: 36px; }
+
+    .header-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #00d4ff;
+    }
+
+    .header-text p {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .content { padding: 16px; }
+
+    .url-box {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: #aaa;
+      word-break: break-all;
+      margin-bottom: 12px;
+      min-height: 36px;
+    }
+
+    .model-select {
+      width: 100%;
+      padding: 8px 10px;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .scan-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #007bff, #0056d6);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    .scan-btn:hover { background: linear-gradient(135deg, #0056d6, #003ea8); }
+    .scan-btn:disabled { background: #333; cursor: not-allowed; }
+
+    .result-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .result-safe {
+      background: rgba(40, 167, 69, 0.15);
+      border: 1px solid #28a745;
+    }
+
+    .result-phishing {
+      background: rgba(220, 53, 69, 0.15);
+      border: 1px solid #dc3545;
+    }
+
+    .result-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .safe-text { color: #28a745; }
+    .phishing-text { color: #dc3545; }
+
+    .confidence-bar-bg {
+      background: #2a2a4a;
+      border-radius: 20px;
+      height: 8px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .confidence-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      transition: width 0.5s ease;
+    }
+
+    .confidence-label {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 14px;
+      color: #888;
+      font-size: 13px;
+      display: none;
+    }
+
+    .footer {
+      padding: 10px 16px;
+      font-size: 10px;
+      color: #444;
+      text-align: center;
+      border-top: 1px solid #1a1a2e;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-text">
+      <h1>🛡️ PhishVision AI</h1>
+      <p>Real-Time Phishing Detection</p>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="url-box" id="currentUrl">Fetching current URL...</div>
+
+    <select class="model-select" id="modelSelect">
+      <option value="gb">Gradient Boosting (Best Accuracy)</option>
+      <option value="xgb">XGBoost</option>
+      <option value="rf">Random Forest</option>
+      <option value="stack">Stacking Ensemble (Recommended)</option>
+    </select>
+
+    <button class="scan-btn" id="scanBtn">🔍 SCAN THIS PAGE</button>
+
+    <div class="loading" id="loading">⏳ Analyzing URL patterns...</div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-title" id="resultTitle"></div>
+      <div id="resultMsg" style="font-size:12px; color:#ccc; margin-top:4px;"></div>
+      <div class="confidence-bar-bg">
+        <div class="confidence-bar-fill" id="confBar"></div>
+      </div>
+      <div class="confidence-label" id="confLabel"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">PhishVision AI v1.0 — Powered by Machine Learning</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
