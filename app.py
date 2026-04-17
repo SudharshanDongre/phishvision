@@ -254,16 +254,6 @@ button, input, select {
     cursor: pointer !important;
 }
 
-/* ── SUBTLE FLOATING EFFECT FOR MAIN PANELS ── */
-section.main > div {
-    animation: floatUI 6s ease-in-out infinite;
-}
-
-@keyframes floatUI {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-4px); }
-    100% { transform: translateY(0px); }
-}
 </style>
 """, unsafe_allow_html=True)
 

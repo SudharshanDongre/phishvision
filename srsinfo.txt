@@ -1,0 +1,998 @@
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 1 of 35 
+ 
+ 
+COMPUTER SCIENCE & ENGINEERING DEPARTMENT 
+Academic Year 2025–2026 | Semester 6 (R) 
+ 
+SOFTWARE REQUIREMENT SPECIFICATION (SRS) & SOFTWARE DESIGN 
+SPECIFICATION (SDS) 
+ 
+PhishVision AI 
+Real-Time Phishing Website Detection System 
+Hybrid Machine Learning Backend with Chrome Browser Extension 
+ 
+ 
+DOCUMENT INFORMATION 
+Document Title Software Requirement Specification (SRS) & Software Design 
+Specification (SDS) 
+Project Name PhishVision AI — Real-Time Phishing Detection System 
+Document ID CSE-SRS-SDS-002-2026 
+Version 1.0 (Final) 
+Status Final Draft – Submitted for Evaluation 
+Date of Issue 11 March 2026 
+Prepared By Sudharshan Dongre | Enrollment No. EN23CS3011036 
+Reviewed By Project Guide / Faculty Evaluator 
+Guide 1 Prof. Mohammed Mazhar 
+Guide 2 Prof. Dharmendra Gupta 
+Department Computer Science & Engineering 
+Institute Medicaps University, Indore — 453331 
+Classification Academic / For Evaluation Only 
+IEEE Standard Ref IEEE Std 830-1998 & IEEE Std 1016-2009 
+  
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+REVISION HISTORY 
+Ver. Date Author 
+Description of Changes 
+v0.1 01 Mar 2026 Sudharshan Dongre 
+v0.2 05 Mar 2026 Sudharshan Dongre 
+v0.3 08 Mar 2026 Sudharshan Dongre 
+v1.0 
+11 Mar 2026 
+Sudharshan Dongre 
+Initial draft – SRS Sections 1 to 3 completed 
+Added functional and non-functional 
+requirements (Sections 4–5) 
+SDS sections added – architecture, data flow 
+and algorithm specification 
+Final version – all sections complete, reviewed 
+and submitted 
+APPROVAL & SIGNATURES 
+Role Name Signature Date 
+Author / Prepared By Sudharshan Dongre ____________ 
+Reviewed By 
+Project Guide / Faculty 
+11 March 2026 
+____________ 
+____________ 
+This document is prepared for academic evaluation only. Prepared in compliance with IEEE Std 830
+1998 and IEEE Std 1016-2009. 
+Sudharshan Dongre | EN23CS3011036          
+Page 2 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 3 of 35 
+Table of Contents 
+1. Introduction  
+    1.1 Purpose .................................................................................................................................. 4 
+    1.2 Document Conventions .......................................................................................................... 4 
+    1.3 Intended Audience ................................................................................................................. 4 
+    1.4 References ............................................................................................................................. 4 
+2. Overall Description .................................................................................................................... 5 
+    2.1 Product Perspective ............................................................................................................... 5 
+    2.2 Product Functions .................................................................................................................. 5 
+    2.3 User Classes and Characteristics .......................................................................................... 5 
+    2.4 Operating Environment .......................................................................................................... 6 
+    2.5 Design and Implementation Constraints ................................................................................ 6 
+    2.6 Assumptions and Dependencies ........................................................................................... 6 
+3. External Interface Requirements .............................................................................................. 7 
+    3.1 User Interface Requirements ................................................................................................. 7 
+    3.2 Software Interfaces ................................................................................................................ 7 
+    3.3 Communication Interfaces ..................................................................................................... 7 
+4. System Features (Functional Requirements) ......................................................................... 8 
+    4.1 URL Scanning and Prediction ................................................................................................ 8 
+    4.2 Feature Extraction Module ..................................................................................................... 8 
+    4.3 Machine Learning Model Engine ........................................................................................... 8 
+    4.4 FastAPI Backend ................................................................................................................... 8 
+    4.5 Chrome Browser Extension ................................................................................................... 9 
+    4.6 Bulk Batch Scanning .............................................................................................................. 9 
+    4.7 Scan History and Analytics .................................................................................................... 9 
+5. Non-Functional Requirements ................................................................................................ 10 
+6. Project Plan .............................................................................................................................. 11 
+    6.1 Team .................................................................................................................................... 11 
+    6.2 Technology Stack ................................................................................................................. 11 
+    6.3 Development Time Schedule ............................................................................................... 11 
+7. Software Design Specification – Analysis Model ................................................................. 13 
+    7.1 Methodology ......................................................................................................................... 13 
+    7.2 Use Case Diagram ............................................................................................................... 13 
+    7.3 ER Model (Entity-Relationship Diagram) ............................................................................. 15 
+    7.4 Data Flow Diagram – Level 0 (Context Diagram) ................................................................ 16 
+    7.5 Data Flow Diagram – Level 1 (Process Decomposition) ..................................................... 16 
+    7.6 State Transition Diagram ..................................................................................................... 17 
+    7.7 Class Diagram ...................................................................................................................... 19 
+    7.9 Activity Diagram ................................................................................................................... 20 
+7A. ML Algorithm – Technical Specification ............................................................................. 21 
+ 
+ 
+8. Software Design Specification – Design Model .................................................................... 23 
+    8.1 Architectural Design ............................................................................................................. 23 
+    8.2 Feature Engineering Specification ....................................................................................... 23 
+    8.3 API Design ........................................................................................................................... 24 
+9. Future Enhancements ............................................................................................................. 25 
+10. Glossary ............................................................................................................................. 26-27 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+1. Introduction 
+1.1 Purpose 
+This Software Requirements Specification (SRS) document describes the functional and non-functional 
+requirements of PhishVision AI — a real-time phishing website detection system. The purpose of this 
+system is to automatically detect whether any given website URL is a phishing site or a legitimate site 
+using a hybrid machine learning approach, and to block phishing pages in real time through a Chrome 
+browser extension. 
+This document serves as a reference for the student developer, project guides, and faculty evaluators 
+to understand the full scope, features, architecture, and constraints of the system. 
+1.2 Document Conventions 
+• Bold text indicates important terms or requirements. 
+• REQ-N denotes individual functional requirement identifiers. 
+• Priority levels used: High, Medium, Low. 
+• Shall indicates a mandatory requirement; Should indicates a desired requirement. 
+• Table titles appear above every table; Figure captions appear below every figure. 
+• FR = Functional Requirement; NFR = Non-Functional Requirement. 
+1.3 Intended Audience 
+Table 1: Intended Audience and Reading Suggestions 
+Audience Role 
+Relevant Sections 
+Project Guide / Faculty 
+Evaluator 
+Student Developer 
+(Sudharshan Dongre) 
+Testers & Reviewers Quality assurance 
+Future Maintainers 
+Assessment & review 
+All sections 
+Design & implementation 
+Sections 2–8 
+Sections 4, 5 
+System evolution 
+Sections 2, 6, 7 
+1.4 References 
+• IEEE Std 830-1998 – IEEE Recommended Practice for Software Requirements Specifications 
+• IEEE Std 1016-2009 – IEEE Standard for Information Technology – Systems Design 
+• T. Chen & C. Guestrin, "XGBoost: A Scalable Tree Boosting System", ACM SIGKDD, 2016 
+• F. Pedregosa et al., "Scikit-learn: Machine Learning in Python", JMLR, vol. 12, 2011 
+• Streamlit Documentation: https://docs.streamlit.io 
+• FastAPI Documentation: https://fastapi.tiangolo.com 
+• PhishTank Open Developer Dataset: http://www.phishtank.com/developer_info.php 
+• B.B. Gupta et al., "Fighting against phishing attacks", EURASIP Journal, 2017 
+Sudharshan Dongre | EN23CS3011036          
+Page 4 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 5 of 35 
+2. Overall Description 
+2.1 Product Perspective 
+PhishVision AI is a standalone minor project developed as part of the B.Tech CSE curriculum at 
+Medicaps University. The system operates locally on the user’s machine and consists of three 
+interconnected components: a Streamlit web application for manual and bulk URL scanning, a FastAPI 
+backend REST server that exposes ML prediction endpoints, and a Chrome browser extension that 
+automatically scans every webpage the user visits and injects a full-page warning overlay when a 
+phishing site is detected. 
+The system does not require any external cloud service or subscription. All machine learning inference 
+is performed locally using pre-trained model files serialized with Python’s pickle library. 
+2.2 Product Functions 
+Table 2: Product Functions Summary 
+# Function Description 
+F1 Single URL Scan User enters any URL and receives a phishing / safe verdict with 
+confidence score 
+F2 Model Selection User selects from Gradient Boosting, XGBoost, or Random Forest 
+model 
+F3 Feature Extraction 30 structural and lexical features automatically extracted from any 
+URL 
+F4 Bulk CSV Scan Upload CSV with multiple URLs; receive batch verdicts and pie chart 
+F5 Auto Browser 
+Scanning 
+Chrome extension automatically scans every visited webpage in 
+background 
+F6 Phishing Block 
+Overlay 
+Extension injects full-page red warning and blocks phishing websites 
+F7 Scan History Session-based log of recently scanned URLs and verdicts in sidebar 
+F8 Feature Analytics Bar chart showing feature importance weights of the ML model 
+2.3 User Classes and Characteristics 
+Table 3: User Classes and Characteristics 
+User Class Description Technical Proficiency 
+General User Browses the web; extension scans pages 
+automatically without any action 
+Basic – general internet 
+user 
+Analyst / Researcher Uses Streamlit app to manually check 
+suspicious URLs one by one 
+Intermediate – security 
+aware 
+Developer Tests FastAPI endpoints directly using tools like 
+Postman or curl 
+Advanced – technical user 
+Faculty Evaluator Reviews full system functionality via both 
+Streamlit and extension 
+Intermediate – academic 
+reviewer 
+ 
+ 
+ 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+2.4 Operating Environment 
+Table 4: Operating Environment 
+Component Technology 
+Details 
+Client – Web App Web Browser 
+Client – Extension Google Chrome 
+Frontend Streamlit 
+Backend FastAPI + Uvicorn 
+ML Engine scikit-learn + XGBoost 
+Feature Extractor Python (extractor.py) 
+OS 
+Windows 10/11 or Linux 
+Google Chrome, Microsoft Edge, Mozilla 
+Firefox (latest versions) 
+Version 88+ with Manifest V3 support and 
+Developer Mode enabled 
+Python-based web app framework, runs 
+on localhost:8501 
+Python REST API server, runs on 
+localhost:8000 
+Pre-trained .pkl model files loaded at 
+server startup 
+30-feature URL lexical analysis, no 
+external API calls required 
+Development: Windows; Deployment: any 
+OS with Python 3.8+ 
+2.5 Design and Implementation Constraints 
+• The project must be completed within the academic semester timeline (January–June 2026). 
+• The system must operate within standard student development environment resource limits 
+with no dedicated GPU. 
+• The solution must rely primarily on open-source tools and libraries to avoid licensing costs. 
+• The Chrome extension requires FastAPI server running locally; cloud deployment would 
+require HTTPS due to Chrome’s mixed-content security policy. 
+• The feature extractor performs URL-based analysis only. HTML/DOM content-based features 
+(iFrame, MouseOver etc.) return default neutral values of 0. 
+• All three ML model .pkl files must exist in the project root before the system can be started. 
+2.6 Assumptions and Dependencies 
+Assumptions: 
+• Users will input complete URLs including the protocol prefix (http:// or https://). 
+• The Phishing.csv dataset contains correctly labelled phishing (1) and legitimate (−1) 
+examples. 
+• The trained model .pkl files accurately represent the patterns in the training dataset. 
+• Users will have Google Chrome installed and will enable Developer Mode to load the 
+extension. 
+Dependencies: 
+• Python 3.8+ with pip-installed packages: streamlit, fastapi, uvicorn, scikit-learn, xgboost, 
+pandas, numpy, plotly, requests. 
+• Google Chrome Version 88+ for Manifest V3 browser extension support. 
+• The Phishing.csv dataset must be present in the project root to retrain models using train.py. 
+Sudharshan Dongre | EN23CS3011036          
+Page 6 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+3. External Interface Requirements 
+3.1 User Interface Requirements 
+• A clean, dark-themed Streamlit dashboard with three tabs: Single URL Scan, Bulk Batch 
+Scan, and Model Analytics. 
+• A URL text input field with placeholder text and a prominent scan button on the main tab. 
+• A Plotly gauge chart displaying prediction confidence score (0–100%) alongside the verdict. 
+• A sidebar containing the PhishVision logo, model selection dropdown, system status 
+indicator, and recent scan history table. 
+• An expandable section in the bulk scan tab showing results as a dataframe and a Plotly pie 
+chart. 
+• A Chrome extension popup (340px wide, dark theme) showing current URL, model selector, 
+scan button, and result with confidence progress bar. 
+• A full-page warning overlay injected into phishing pages with a red-bordered alert box, URL 
+display, and two action buttons. 
+3.2 Software Interfaces 
+Table 5: Software Interfaces 
+Interface 
+Type 
+Purpose 
+Streamlit (app.py) 
+Internal UI 
+Web-based dashboard for user-facing prediction and 
+analytics 
+FastAPI (api.py) 
+Internal REST 
+API 
+Receives URL prediction requests from Streamlit and 
+extension 
+extractor.py 
+Internal 
+Module 
+Extracts 30 URL features for any given URL string 
+train.py 
+Internal Script 
+Trains and serializes GB, XGBoost, RF models as 
+.pkl files 
+model_gb.pkl / 
+model_xgb.pkl / model_rf.pkl 
+Binary Model 
+Files 
+Pre-trained ML models loaded by FastAPI at startup 
+Chrome Extension 
+(popup.js) 
+External Client 
+Sends POST request to FastAPI /predict endpoint 
+Chrome Extension 
+(content.js) 
+External Client 
+Auto-scans pages and injects DOM overlay on 
+phishing detection 
+3.3 Communication Interfaces 
+• RESTful API over HTTP protocol for all Streamlit-to-FastAPI and extension-to-FastAPI 
+communication. 
+• JSON as the primary data exchange format between all system components. 
+• CORS middleware enabled on FastAPI to allow cross-origin requests from the browser 
+extension. 
+• Chrome Extension Manifest V3 permissions: activeTab, scripting, tabs, and host_permissions 
+for localhost:8000. 
+• WebSocket support: not required in current version; planned for future real-time notification 
+features. 
+Sudharshan Dongre | EN23CS3011036          
+Page 7 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+4. System Features (Functional Requirements) 
+4.1 URL Scanning and Prediction 
+Priority: High 
+1. REQ-1: The system shall accept any URL string as input from the user via a Streamlit text 
+input field. 
+2. REQ-2: The system shall extract 30 features from the input URL using the extractor.py 
+module without any additional user input. 
+3. REQ-3: The system shall send the feature array to the selected ML model and return a binary 
+prediction: 0 (Safe) or 1 (Phishing). 
+4. REQ-4: The system shall display the verdict as a clearly visible success (green) or error (red) 
+message box. 
+5. REQ-5: The system shall display the prediction confidence score as a Plotly gauge chart 
+alongside the verdict. 
+4.2 Feature Extraction Module 
+Priority: High 
+6. REQ-6: The extractor.py module shall accept any URL string as input and return a fixed
+length array of exactly 30 numerical features. 
+7. REQ-7: The module shall automatically prepend ‘http://’ to URLs that do not contain a 
+protocol prefix. 
+8. REQ-8: The module shall extract URL-based features: IP presence, URL length, shortening 
+service, @ symbol, double slash, hyphen, subdomain count, HTTPS scheme, HTTPS in 
+domain name, port number, mailto presence, and abnormal URL. 
+9. REQ-9: The module shall assign default neutral values (0) to content-based features that 
+require live page fetching, ensuring no crashes for offline or unreachable URLs. 
+10. REQ-10: The module shall handle all exceptions silently and return a valid feature array 
+regardless of URL validity. 
+4.3 Machine Learning Model Engine 
+Priority: High 
+11. REQ-11: The system shall support three trained ML models: Gradient Boosting 
+(model_gb.pkl), XGBoost (model_xgb.pkl), and Random Forest (model_rf.pkl). 
+12. REQ-12: The train.py script shall train all three models on the Phishing.csv dataset with an 
+80:20 train-test split and serialize them as .pkl files using Python’s pickle library. 
+13. REQ-13: XGBoost training shall map the dataset labels from {−1, 1} to {0, 1} as required by 
+the XGBClassifier API. 
+14. REQ-14: All models shall support predict_proba() to return class probability scores for 
+confidence calculation. 
+4.4 FastAPI Backend 
+Priority: High 
+15. REQ-15: The api.py server shall expose a GET endpoint at ‘/’ returning a JSON health-check 
+status message. 
+16. REQ-16: The api.py server shall expose a POST endpoint at ‘/predict’ accepting a JSON 
+body with fields ‘url’ (string) and ‘model’ (string, default: ‘gb’). 
+17. REQ-17: The /predict endpoint shall return a JSON response containing: url, verdict, 
+is_phishing (boolean), confidence (float), and model_used (string). 
+18. REQ-18: The server shall load all three .pkl model files at startup and log the success or 
+failure status of each to the console. 
+19. REQ-19: The server shall implement CORS middleware allowing requests from all origins to 
+support the Chrome extension. 
+20. REQ-20: The server shall return a JSON error message for any invalid model name or 
+malformed URL input. 
+Sudharshan Dongre | EN23CS3011036          
+Page 8 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+4.5 Chrome Browser Extension 
+Priority: High 
+21. REQ-21: The content.js script shall automatically extract the current tab’s URL on every page 
+load and send it to the FastAPI /predict endpoint using the Gradient Boosting model. 
+22. REQ-22: If the API returns is_phishing: true, the extension shall immediately hide the 
+webpage body and inject a full-page dark warning overlay. 
+23. REQ-23: The warning overlay shall display: a warning icon, the detected URL, confidence 
+score, a ‘Go Back (Safe)’ button, and a ‘Proceed Anyway (Risk)’ button. 
+24. REQ-24: The extension popup shall display the current tab’s URL, a model selection 
+dropdown, a Scan button, and the verdict with a color-coded confidence progress bar. 
+25. REQ-25: The extension shall silently skip scanning of internal browser pages: chrome://, 
+chrome-extension://, and about: pages. 
+26. REQ-26: If the FastAPI server is offline, the extension shall fail silently without displaying any 
+error to the user. 
+4.6 Bulk Batch Scanning 
+Priority: Medium 
+27. REQ-27: The Streamlit Bulk Scan tab shall allow users to upload a CSV file containing a 
+column named ‘url’. 
+28. REQ-28: The system shall scan all URLs in the uploaded CSV sequentially using the 
+currently selected ML model. 
+29. REQ-29: The system shall append a ‘Verdict’ column to the dataframe and display the full 
+results table. 
+30. REQ-30: The system shall render a Plotly pie chart showing the Safe vs Phishing distribution 
+of results. 
+4.7 Scan History and Analytics 
+Priority: Low 
+31. REQ-31: The sidebar shall maintain a session-based list of all URLs scanned in the current 
+session along with their verdicts. 
+32. REQ-32: The sidebar shall display the last 5 scanned entries as a formatted table. 
+33. REQ-33: The Model Analytics tab shall display a static bar chart showing the relative 
+importance weights of the 8 most significant URL features. 
+Sudharshan Dongre | EN23CS3011036          
+Page 9 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 10 of 35 
+5. Non-Functional Requirements 
+Table 6: Non-Functional Requirements 
+NFR ID Category Requirement Target Metric 
+NFR-01 Performance The FastAPI /predict endpoint shall respond within 2 
+seconds for any URL input under normal operating 
+conditions 
+< 2 sec per 
+request 
+NFR-02 Performance Streamlit UI shall load the initial page within 3 
+seconds on first launch 
+< 3 sec startup 
+NFR-03 Accuracy The Gradient Boosting model shall achieve a 
+minimum test accuracy of 95% on the Phishing.csv 
+dataset 
+≥ 95% 
+accuracy 
+NFR-04 Reliability The system shall handle invalid, malformed, or 
+unreachable URLs without crashing, returning a valid 
+safe response 
+Zero crash 
+tolerance 
+NFR-05 Security The extension shall never store, log, or transmit user 
+browsing URLs to any external server or third party 
+Local only 
+processing 
+NFR-06 Security All ML model .pkl files shall be loaded read-only at 
+startup and never overwritten during runtime 
+Read-only 
+model files 
+NFR-07 Usability The Streamlit interface shall be fully usable by a non
+technical user without any prior training or 
+documentation 
+No training 
+required 
+NFR-08 Usability The extension warning overlay shall render correctly 
+on all websites regardless of their existing CSS 
+styles 
+100% overlay 
+coverage 
+NFR-09 Portability The system shall run on any machine with Python 
+3.8+, Google Chrome 88+, and the required pip 
+packages installed 
+Cross-platform 
+support 
+NFR-10 Maintainability Each component (extractor, API, app, extension) 
+shall be independently modifiable without affecting 
+others 
+Fully modular 
+design 
+  
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 11 of 35 
+6. Project Plan 
+6.1 Team 
+Developer: Sudharshan Dongre (EN23CS3011036) 
+Semester: 6 'R' 
+Guide 1: Prof. Mohammed Mazhar 
+Guide 2: Prof. Dharmendra Gupta 
+Institution: Computer Science & Engineering Department, Medicaps University, Indore 
+6.2 Technology Stack 
+Table 7: Technology Stack 
+Layer Technology Purpose 
+Frontend Streamlit (Python) Web application UI — single scan, bulk scan, 
+analytics tabs 
+Backend FastAPI + Uvicorn REST API server — URL prediction endpoint for 
+app and extension 
+ML Models scikit-learn + XGBoost Gradient Boosting, Random Forest, XGBoost 
+classifiers 
+Feature Extractor Python (regex, urllib) 30-feature URL analysis — no external API 
+dependencies 
+Model Training train.py + Phishing.csv Training script — serializes all 3 models as .pkl 
+files 
+Visualization Plotly Gauge charts (confidence), pie charts (bulk scan 
+results) 
+Browser 
+Extension 
+JavaScript (Manifest V3) Chrome extension — popup UI, auto-scan, 
+warning overlay 
+Data Format JSON Request/response format between all system 
+components 
+Language Python 3.8+ Core programming language for all backend 
+components 
+6.3 Development Time Schedule 
+Table 8: Development Schedule (8 Weeks) 
+Week Task Deliverable 
+Week 1 Requirement Analysis & Dataset 
+Study 
+SRS Document + Phishing.csv analysis complete 
+Week 2 Feature Engineering Design extractor.py with all 30 features implemented and 
+tested 
+Week 3 Model Training (GB, XGBoost, 
+RF) 
+train.py complete; 3 .pkl model files generated with 
+accuracy reports 
+Week 4 FastAPI Backend Development api.py with /predict and CORS working; tested with 
+Postman 
+Week 5 Streamlit Web Application app.py with 3 tabs, model selector, gauge chart, and 
+bulk scan working 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Week Task 
+Deliverable 
+Week 6 Chrome Extension Development All 4 extension files (manifest, popup, content) 
+working in Chrome 
+Week 7 Integration & End-to-End Testing All components connected; tested with real phishing 
+and safe URLs 
+Week 8 
+Documentation & Presentation 
+Final SRS/SDS document, code review, demo-ready 
+Sudharshan Dongre | EN23CS3011036          
+Page 12 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7. Software Design Specification – Analysis Model 
+7.1 Methodology 
+The system is developed using a modular, component-based architecture following the Pipeline 
+Pattern. Each component (extractor → API → model → response) is independently designed and can 
+be replaced or upgraded without affecting other components. This is particularly suitable for ML-based 
+systems where models are retrained and replaced periodically. 
+The Software Process Model adopted is the Iterative & Incremental Development Model. This was 
+chosen because: (a) ML model accuracy can be refined with each iteration as more features are tested; 
+(b) core components (extractor, API) can be built and validated before the extension is added; and (c) 
+it suits a solo academic project where guide feedback is incorporated progressively. Each iteration 
+follows the cycle: Plan → Design → Code → Test → Review. 
+7.2 Use Case Diagram 
+The Use Case Diagram below illustrates the interactions between the three primary actors (General 
+User, Analyst, Developer) and the system use cases. 
+Figure 1: Use Case Diagram – PhishVision AI System 
+Use Case Specifications: 
+Table 9: UC-01: Single URL Scan 
+Field 
+UC-01: Single URL Scan 
+Actor 
+Analyst / General User 
+Pre-Condition 
+User has opened the Streamlit web app at localhost:8501; FastAPI server 
+running at localhost:8000 
+Primary Flow 
+1. User enters URL in text input   2. Selects ML model from dropdown   3. 
+Clicks ‘RUN SECURITY ANALYSIS’   4. System extracts 30 features   5. 
+FastAPI returns verdict   6. UI displays result with gauge chart 
+Alternate Flow 1 
+Empty input: System shows ‘Input required’ warning. Returns to step 1. 
+Alternate Flow 2 
+API offline: System shows ‘Error: model .pkl not found’. User must start 
+uvicorn. 
+Sudharshan Dongre | EN23CS3011036          
+Page 13 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 14 of 35 
+Field UC-01: Single URL Scan 
+Post-Condition Verdict and confidence score displayed; URL logged to scan history 
+Use Case Termination User sees Safe or Phishing result with confidence percentage 
+ 
+Table 10: UC-02: Auto Browser Scan (Extension) 
+Field UC-02: Auto Browser Scan 
+Actor General User 
+Pre-Condition Chrome extension loaded; FastAPI server running on localhost:8000 
+Primary Flow 1. User navigates to any website   2. content.js extracts URL automatically   
+3. Sends POST to /predict   4. If Phishing → page body hidden, overlay 
+injected   5. User sees warning with Go Back / Proceed buttons 
+Alternate Flow 1 Safe URL: No overlay shown. Page loads normally. No user interruption. 
+Alternate Flow 2 API offline: Extension fails silently. Page loads normally. 
+Alternate Flow 3 Internal page (chrome://): Extension skips silently. 
+Post-Condition Phishing page blocked with warning overlay OR safe page loads normally 
+Use Case Termination User clicks ‘Go Back’ (safe) or ‘Proceed Anyway’ (risk) 
+ 
+Table 11: UC-03: Bulk CSV Scan 
+Field UC-03: Bulk CSV Scan 
+Actor Analyst 
+Pre-Condition User has a CSV file with a column named ‘url’; FastAPI server running 
+Primary Flow 1. User opens Bulk Scan tab   2. Uploads CSV file   3. System scans all 
+URLs   4. Appends Verdict column   5. Displays results table   6. Renders 
+pie chart 
+Alternate Flow 1 Missing ‘url’ column: System shows ‘Missing url column’ error. 
+Post-Condition All URLs scanned; results table and pie chart displayed 
+Use Case Termination User downloads or reviews batch results 
+  
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7.3 ER Model (Entity-Relationship Diagram) 
+The ER Diagram shows the main entities processed by the PhishVision AI system and their 
+relationships. Since this is a stateless prediction system (no persistent database), the ER model 
+describes the in-memory data objects and their relationships during a prediction session. 
+Figure 2: Entity-Relationship (ER) Diagram – PhishVision AI Data Model 
+Table 12: ER Diagram – Entity Descriptions 
+Entity Key Attributes 
+Description 
+URL_INPUT 
+FEATURE_ARRAY 
+ML_MODEL 
+PREDICTION_RESULT modelUsed: String, verdict: 
+String, is_phishing: Boolean, 
+confidence: Float, model_used: 
+String 
+SCAN_HISTORY 
+url: String, timestamp: 
+DateTime, source: Enum, 
+protocol: String, domain: String, 
+port: String 
+The raw URL submitted by user or 
+captured by extension 
+features[30]: Integer Array, 
+urlId: String FK, 
+SSL_final_State: Integer 
+30 numerical features extracted from 
+URL by extractor.py 
+model_id: String, model_type: 
+Enum, pkl_path: String, 
+accuracy: Float, nEstimators: 
+Integer 
+One of 3 trained models (GB, XGBoost, 
+RF) loaded in memory 
+Output of ML model prediction returned 
+to client 
+session_id: String, url: String, 
+verdict: String, confidence: 
+Float, scannedAt: DateTime, 
+modelUsed: String 
+Session-based log of scanned URLs 
+maintained in Streamlit state 
+Sudharshan Dongre | EN23CS3011036          
+Page 15 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7.4 Data Flow Diagram – Level 0 (Context Diagram) 
+The Level 0 DFD treats the entire PhishVision AI system as a single process and shows data flows 
+to/from all external entities. 
+Figure 3: DFD Level 0 – System Context Diagram  |  Figure 4: DFD Level 1 – Internal Process Decomposition 
+7.5 Data Flow Diagram – Level 1 (Process Decomposition) 
+The Level 1 DFD decomposes the system into 5 internal processes (P1–P5) and 2 data stores (D1
+D2), showing detailed data flows between all components. 
+Table 13: DFD Level 1 – Process Specifications 
+Process 
+Name 
+Specification 
+P1 
+URL Receive 
+Accepts raw URL string from Streamlit text input or Chrome 
+extension content.js POST request 
+P2 
+Feature Extract 
+Passes URL to extractor.py; extracts 30 numerical features; 
+returns feature array of shape (1, 30) 
+P3 
+Model Select 
+Reads model key (‘gb’, ‘xgb’, ‘rf’) from request; retrieves 
+corresponding pre-loaded model from D1 
+P4 
+ML Predict 
+Feeds feature array to selected model’s predict() and 
+predict_proba() methods; returns prediction and probability 
+P5 
+Response Build 
+Constructs JSON response: {url, verdict, is_phishing, 
+confidence, model_used}; sends to client 
+Sudharshan Dongre | EN23CS3011036          
+Page 16 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7.6 State Transition Diagram 
+The State Transition Diagram describes all possible states of a URL scan request during its lifecycle, 
+from initial submission to final verdict display. 
+Figure 5: State Transition Diagram – URL Scan Request Lifecycle 
+Table 14: State Transition – State Descriptions 
+State Description 
+Triggering Event 
+IDLE System waiting; no URL submitted 
+User opens Streamlit app or 
+navigates to webpage 
+URL_RECEIVED Raw URL string received by FastAPI User clicks Scan button or 
+extension captures URL 
+EXTRACTING extractor.py processing the URL 
+EXTRACTION_FAILED URL malformed; default features 
+returned 
+PREDICTING 
+ML model running inference on 
+feature array 
+POST request received at /predict 
+endpoint 
+Exception caught in extractor.py 
+Feature array passed to 
+model.predict() 
+Sudharshan Dongre | EN23CS3011036          
+Page 17 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+State Description 
+SAFE Model returns prediction = 0; 
+confidence computed 
+Triggering Event 
+predict() returns 0 (Legitimate 
+class) 
+PHISHING Model returns prediction = 1; 
+confidence computed 
+BLOCKED Extension injects overlay; page body 
+hidden 
+RESULT_DISPLAYED 
+Verdict shown in Streamlit or 
+extension popup 
+predict() returns 1 (Phishing class) 
+is_phishing: true returned by API 
+JSON response received by client 
+Sudharshan Dongre | EN23CS3011036          
+Page 18 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7.7 Class Diagram 
+The Class Diagram shows all major classes, their attributes, methods, and inter-class relationships 
+including associations and dependencies between the Python backend components and JavaScript 
+extension components. 
+Figure 6: Class Diagram – PhishVision AI System Components 
+Sudharshan Dongre | EN23CS3011036          
+Page 19 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7.9 Activity Diagram 
+The Activity Diagram depicts the end-to-end workflow from URL submission to final verdict display, 
+including decision branches for safe and phishing outcomes. 
+Figure 8: Activity Diagram – Phishing Detection Process Workflow 
+Sudharshan Dongre | EN23CS3011036          
+Page 20 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+7A. ML Algorithm – Technical Specification 
+This section provides a complete technical explanation of the machine learning pipeline used for 
+phishing website detection. The core algorithm is XGBoost (Extreme Gradient Boosting) and Gradient 
+Boosting Classifier, trained on 30 URL-based features extracted from the Phishing.csv dataset. 
+7A.1 ML Processing Pipeline 
+Figure 9: ML Algorithm Pipeline – 6 Stages from URL Input to Prediction 
+7A.2 Step-by-Step Algorithm Explanation 
+Step 1 — URL Parsing: 
+• The URL string is parsed using Python’s urllib.parse.urlparse() to extract scheme, netloc 
+(domain), path, and port components. 
+• If the URL lacks a scheme (http:// or https://), one is automatically prepended to ensure valid 
+parsing. 
+• Output: Structured URL components available for feature extraction. 
+Step 2 — Feature Extraction (extractor.py): 
+• 30 numerical features are extracted from the URL using regex patterns, string operations, and 
+urlparse components. 
+• All features return integer values: 1 (phishing indicator), 0 (neutral), or −1 (safe indicator). 
+• Features are grouped into: URL-based (12 features), Security-based (2 features), Content
+based (16 features, defaulting to 0). 
+• Output: A Python list of exactly 30 integers representing the URL’s feature vector. 
+Step 3 — Feature Array Normalization: 
+• The feature list is converted to a NumPy array using np.array(features). 
+Sudharshan Dongre | EN23CS3011036          
+Page 21 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+• The array is reshaped to (1, 30) using .reshape(1, -1) to match the input format expected by 
+scikit-learn models. 
+• No StandardScaler normalization is applied as tree-based models (GB, XGBoost, RF) are 
+scale-invariant. 
+Step 4 — Model Loading: 
+• All three .pkl model files are loaded at FastAPI server startup using pickle.load(). 
+• Models are stored in a Python dictionary: models = {‘gb’: gb_model, ‘xgb’: xgb_model, ‘rf’: 
+rf_model}. 
+• The client specifies which model to use in the POST request body via the ‘model’ field 
+(default: ‘gb’). 
+Step 5 — ML Inference: 
+• selected_model.predict(features_array) returns a binary prediction: 0 (Safe) or 1 (Phishing) 
+for GB/RF; 0 or 1 for XGBoost. 
+• selected_model.predict_proba(features_array) returns class probability scores [P(Safe), 
+P(Phishing)]. 
+• Confidence is computed as: max(probabilities) × 100 to express as a percentage. 
+• For Gradient Boosting (GB) trained with labels −1 and 1: prediction in [1] is treated as 
+phishing. 
+Step 6 — Result Generation: 
+• A JSON response object is constructed: {url, verdict, is_phishing, confidence, model_used}. 
+• The verdict is set to ‘Phishing’ if is_phishing is True, else ‘Safe’. 
+• The response is returned to the calling client (Streamlit app or Chrome extension 
+popup/content.js). 
+Table 15: ML Algorithm – Stage-by-Stage Summary 
+Stage Tool / Library Input 
+Output 
+URL Parsing Python urllib.parse Raw URL string 
+Feature Extraction Python re, string ops Parsed URL 
+components 
+Scheme, domain, path, 
+port 
+List of 30 integers (1/0/−1) 
+Array Conversion NumPy Python list [30 items] ndarray shape (1, 30) 
+Model Loading Python pickle .pkl model files 
+In-memory sklearn/xgb 
+models 
+Prediction scikit-learn / XGBoost Feature array (1, 30) Binary class: 0 or 1 
+Confidence predict_proba() Feature array (1, 30) Probability score 0.0 to 
+1.0 
+Response 
+FastAPI JSONResponse 
+Prediction + 
+confidence 
+JSON: {verdict, 
+is_phishing, confidence} 
+Sudharshan Dongre | EN23CS3011036          
+Page 22 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 23 of 35 
+8. Software Design Specification – Design Model 
+8.1 Architectural Design 
+The system adopts a Three-Tier Architecture with a JavaScript browser extension as an additional client 
+layer. 
+Table 16: System Architecture – Tiers and Responsibilities 
+Tier Component Technology Responsibility 
+Presentation Streamlit Frontend Python + Streamlit User interface, URL input, 
+results display, bulk scan 
+Presentation Chrome Extension JavaScript (MV3) Auto-scan, popup UI, 
+warning overlay injection 
+Application FastAPI Backend Python + FastAPI API routing, model loading, 
+prediction logic 
+ML Engine Feature Extractor Python (extractor.py) URL parsing and 30-feature 
+extraction 
+ML Engine Model Files scikit-learn/XGBoost 
+.pkl 
+Trained classifiers for 
+phishing prediction 
+Data Phishing.csv CSV Dataset Training data with 30 
+features and 11,000+ URL 
+records 
+8.2 Feature Engineering Specification 
+Table 17: Feature Engineering – All 30 Features 
+# Feature Name Category Extraction Logic 
+1 having_IP_Address URL-Based 1 if IP address pattern found in domain, else 
+−1 
+2 URL_Length URL-Based −1 if <54 chars; 0 if 54–75 chars; 1 if >75 
+chars 
+3 Shortening_Service URL-Based 1 if known URL shortener detected (bit.ly, 
+tinyurl etc.), else −1 
+4 having_At_Symbol URL-Based 1 if ‘@’ present in URL, else −1 
+5 double_slash_redirect URL-Based 1 if ‘//’ found after position 7 in URL string 
+6 Prefix_Suffix URL-Based 1 if ‘-’ present in domain name, else −1 
+7 having_Sub_Domain URL-Based −1 if ≤2 dots; 0 if 3 dots; 1 if >3 dots in 
+domain 
+8 SSLfinal_State Security −1 if scheme is HTTPS; 1 if scheme is HTTP 
+9 Domain_registration_length Domain Default 0 (neutral — WHOIS not 
+implemented) 
+10 Favicon Visual Default 0 (neutral — visual check not 
+implemented) 
+11 port Network 1 if non-standard port (not 80/443) present in 
+URL 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+# Feature Name 
+12 HTTPS_token 
+Category 
+Extraction Logic 
+URL-Based 
+1 if ‘https’ string appears in domain name 
+itself 
+13 Request_URL 
+Content 
+Default 0 (neutral) 
+14 URL_of_Anchor 
+15 Links_in_tags 
+16 SFH 
+17 Submitting_to_email 
+18 Abnormal_URL 
+19
+30 
+Content Features 
+(HTML/JS) 
+Content 
+Default 0 (neutral) 
+Content 
+Default 0 (neutral) 
+Content 
+Default 0 (neutral) 
+URL-Based 
+1 if ‘mailto:’ or ‘mail()’ present in URL 
+URL-Based 
+1 if domain string found inside URL path 
+Content 
+Default 0 (neutral) — DOM-based checks not 
+implemented 
+8.3 API Design 
+Table 18: REST API Endpoints 
+Method Endpoint 
+Auth 
+Required 
+Description 
+GET / No Health check — returns {status: ‘PhishVision 
+API is running’} 
+POST 
+/predict 
+No 
+Main prediction — accepts {url, model}; returns 
+{verdict, is_phishing, confidence, model_used} 
+Request Body (POST /predict):   { "url": "https://www.example.com", "model": "gb" } 
+Response Body (POST /predict):   { "url": "...", "verdict": "Safe", "is_phishing": false, "confidence": 
+97.23, "model_used": "gb" } 
+Sudharshan Dongre | EN23CS3011036          
+Page 24 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+9. Future Enhancements 
+Table 19: Planned Future Enhancements 
+Enhancement Description Priority 
+Real HTML/DOM Feature 
+Extraction 
+Visual Heuristic Module Add Favicon and logo similarity analysis using 
+OpenCV to detect visual brand mimicry 
+Cloud Deployment 
+Live Threat Intelligence 
+Feed 
+Deploy FastAPI backend on AWS/GCP/Heroku with 
+HTTPS to enable extension to work without a local 
+server 
+Integrate PhishTank API and Google Safe Browsing 
+API for real-time blacklist cross-checking alongside 
+ML prediction 
+User Feedback Mechanism Allow users to report false positives and false 
+negatives to improve model retraining over time 
+Chrome Web Store 
+Publication 
+Package and publish the extension on the Chrome 
+Web Store for public availability 
+Multi-Model Ensemble Combine predictions from all three models using a 
+voting classifier for improved accuracy 
+Email / SMS Alerts 
+Implement live page fetching using requests + 
+BeautifulSoup to extract iFrame, MouseOver, 
+RightClick, Web_Forwards features 
+High 
+High 
+High 
+Medium 
+Medium 
+Medium 
+Low 
+Notify users via email or SMS when a phishing site is 
+detected during browsing session 
+Low 
+Sudharshan Dongre | EN23CS3011036          
+Page 25 of 35 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Sudharshan Dongre | EN23CS3011036          Page 26 of 35 
+10. Glossary 
+Table 20: Glossary of Terms and Abbreviations 
+Term / 
+Abbreviation Full Form / Definition 
+SRS Software Requirements Specification – a document formally describing system 
+requirements 
+SDS Software Design Specification – a document describing system architecture and 
+design decisions 
+ML Machine Learning – the field of AI where systems learn patterns from data to make 
+predictions 
+XGBoost Extreme Gradient Boosting – a high-performance, scalable tree boosting ML 
+algorithm 
+GB Gradient Boosting Classifier – an ensemble ML model that builds trees 
+sequentially to minimize errors 
+RF Random Forest Classifier – an ensemble of decision trees trained on random 
+subsets of data 
+API Application Programming Interface – a set of rules for building and integrating 
+software applications 
+REST Representational State Transfer – an architectural style for designing networked 
+web services 
+FastAPI A modern, high-performance Python web framework for building REST APIs with 
+automatic documentation 
+Streamlit An open-source Python framework for building and sharing interactive data web 
+applications 
+URL Uniform Resource Locator – a web address specifying the location of a resource 
+on the internet 
+CORS Cross-Origin Resource Sharing – a browser security policy controlling cross
+domain API access 
+JSON JavaScript Object Notation – a lightweight text format for data exchange between 
+systems 
+PKL Pickle file – a Python binary file format for serializing and saving trained ML model 
+objects 
+DOM Document Object Model – the programmatic representation of a webpage’s HTML 
+structure 
+SSL Secure Sockets Layer – a cryptographic protocol that provides HTTPS security for 
+websites 
+DFD Data Flow Diagram – a diagram showing how data moves through a system or 
+process 
+ER Entity-Relationship – a conceptual model describing data entities and their 
+relationships 
+MV3 Manifest Version 3 – the latest Chrome extension configuration format with 
+enhanced security 
+PhishVision AI — Real-Time Phishing Detection System | SRS & SDS Document 
+Term / 
+Abbreviation 
+Full Form / Definition 
+Phishing 
+A type of cyberattack that uses deceptive websites or emails to steal user 
+credentials or financial data 
+Zero-day 
+A phishing attack using a newly registered domain with no prior malicious history 
+in blacklists 
+TF-IDF 
+Term Frequency–Inverse Document Frequency – a text relevance scoring statistic 
+(not used in this project) 
+Pickle 
+Python’s built-in object serialization library used to save and load trained ML 
+model files 
+— End of Document —    PhishVision AI | SRS & SDS | Version 1.0 
+Sudharshan Dongre | EN23CS3011036          
+Page 27 of 35 

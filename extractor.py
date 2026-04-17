@@ -9,6 +9,8 @@ import socket
 import math
 import logging
 from urllib.parse import urlparse, parse_qs
+import requests
+from bs4 import BeautifulSoup
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
