@@ -1,4 +1,5 @@
 import streamlit as st
+import joblib
 import pickle
 import numpy as np
 import pandas as pd
@@ -453,10 +454,10 @@ with st.sidebar:
     )
 
     model_map = {
-        "Stacking Ensemble (Strongest)": "model_stack.pkl",
-        "Gradient Boosting": "model_gb.pkl",
-        "XGBoost": "model_xgb.pkl",
-        "Random Forest": "model_rf.pkl"
+        "Stacking Ensemble (Strongest)": "model_stack.joblib",
+        "Gradient Boosting": "model_gb.joblib",
+        "XGBoost": "model_xgb.joblib",
+        "Random Forest": "model_rf.joblib"
     }
 
     st.markdown("""<hr style="border-color:#00ff8811; margin:20px 0;">""", unsafe_allow_html=True)
@@ -532,9 +533,11 @@ with st.sidebar:
 @st.cache_resource
 def load_selected_model(name):
     try:
-        with open(model_map[name], 'rb') as f:
-            return pickle.load(f)
+        return joblib.load(model_map[name])
     except FileNotFoundError:
+        return None
+    except Exception as e:
+        st.error(f"Model load error: {e}")
         return None
 
 current_model = load_selected_model(model_choice)
