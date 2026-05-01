@@ -5,6 +5,7 @@ FastAPI backend for phishing URL detection with:
 - Rule-based pre-checks
 - Detailed debugging logs
 - Confidence scoring
+- User authentication & profile management
 """
 
 from fastapi import FastAPI, HTTPException
@@ -14,8 +15,20 @@ import pickle
 import numpy as np
 import logging
 import time
+import sqlite3
+import hashlib
+import hmac
+import secrets
+import os
 from typing import Optional
 from extractor import extract_features, rule_based_check, get_domain_parts
+
+# Load environment variables (optional - graceful fallback)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # ============================================================================
 # CONFIGURATION
@@ -29,6 +42,61 @@ logging.basicConfig(
 logger = logging.getLogger("PhishVision-API")
 
 # ============================================================================
+# USER AUTHENTICATION & DATABASE
+# ============================================================================
+
+DATABASE_FILE = os.getenv("DATABASE_PATH", "./users.db")
+logger.info(f"Using database: {DATABASE_FILE}")
+
+def _hash_password(password, salt=None):
+    """Hash password using PBKDF2 with salt."""
+    if salt is None:
+        salt = secrets.token_hex(16)
+    password_hash = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000)
+    return f"{salt}${password_hash.hex()}"
+
+def _verify_password(password, stored_hash):
+    """Verify password against stored hash."""
+    try:
+        salt, hash_part = stored_hash.split('$')
+        new_hash = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000).hex()
+        return hmac.compare_digest(hash_part, new_hash)
+    except Exception:
+        return False
+
+def _init_database():
+    """Initialize SQLite database for user storage."""
+    conn = sqlite3.connect(DATABASE_FILE)
+    cursor = conn.cursor()
+    
+    # Create users table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        full_name TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    
+    # Create demo account if it doesn't exist
+    cursor.execute("SELECT * FROM users WHERE email = ?", ("admin@phishvision.ai",))
+    if not cursor.fetchone():
+        demo_hash = _hash_password("PhishVision@123")
+        cursor.execute(
+            "INSERT INTO users (email, full_name, password_hash) VALUES (?, ?, ?)",
+            ("admin@phishvision.ai", "Admin User", demo_hash)
+        )
+        logger.info("✅ Created demo account: admin@phishvision.ai")
+    
+    conn.commit()
+    conn.close()
+
+_init_database()
+
+# ============================================================================
 # FASTAPI APP
 # ============================================================================
 
@@ -38,14 +106,20 @@ app = FastAPI(
     version="2.0"
 )
 
-# CORS for browser extension
+# CORS Configuration - restrict in production
+cors_origins = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://localhost:8501,http://192.168.31.75:8501"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info(f"CORS origins: {cors_origins}")
 
 # ============================================================================
 # LOAD MODELS
@@ -99,6 +173,33 @@ class PredictionResponse(BaseModel):
     rule_based_flags: Optional[list] = None
     feature_summary: Optional[dict] = None
     debug_info: Optional[dict] = None
+
+# ============================================================================
+# AUTH REQUEST/RESPONSE MODELS
+# ============================================================================
+
+class UserRegisterRequest(BaseModel):
+    email: str
+    full_name: str
+    password: str
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class UserUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+
+class UserResponse(BaseModel):
+    email: str
+    full_name: str
+    created_at: str
+
+class AuthResponse(BaseModel):
+    success: bool
+    message: str
+    user: Optional[UserResponse] = None
 
 # ============================================================================
 # PREDICTION ENDPOINT
@@ -278,8 +379,173 @@ def predict(request: URLRequest):
     return response
 
 # ============================================================================
-# HEALTH CHECK
+# USER AUTHENTICATION ENDPOINTS
 # ============================================================================
+
+@app.post("/auth/register", response_model=AuthResponse)
+def register_user(request: UserRegisterRequest):
+    """Register a new user."""
+    if not request.email or "@" not in request.email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    if len(request.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    if not request.full_name.strip():
+        raise HTTPException(status_code=400, detail="Full name is required")
+    
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT email FROM users WHERE email = ?", (request.email,))
+        if cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        password_hash = _hash_password(request.password)
+        cursor.execute(
+            "INSERT INTO users (email, full_name, password_hash) VALUES (?, ?, ?)",
+            (request.email, request.full_name.strip(), password_hash)
+        )
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"✅ New user registered: {request.email}")
+        return AuthResponse(
+            success=True,
+            message="Registration successful",
+            user=UserResponse(
+                email=request.email,
+                full_name=request.full_name.strip(),
+                created_at=""
+            )
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+@app.post("/auth/login", response_model=AuthResponse)
+def login_user(request: UserLoginRequest):
+    """Login user and return user info."""
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT email, full_name, password_hash, created_at FROM users WHERE email = ?", (request.email,))
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        email, full_name, password_hash, created_at = user
+        if not _verify_password(request.password, password_hash):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        logger.info(f"✅ User logged in: {request.email}")
+        return AuthResponse(
+            success=True,
+            message="Login successful",
+            user=UserResponse(
+                email=email,
+                full_name=full_name,
+                created_at=created_at
+            )
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+@app.post("/auth/update", response_model=AuthResponse)
+def update_user_profile(email: str, request: UserUpdateRequest):
+    """Update user profile (name, password)."""
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT password_hash FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        
+        if not user:
+            conn.close()
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Build update query
+        updates = []
+        params = []
+        
+        if request.full_name:
+            updates.append("full_name = ?")
+            params.append(request.full_name.strip())
+        
+        if request.password:
+            if len(request.password) < 8:
+                conn.close()
+                raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+            updates.append("password_hash = ?")
+            params.append(_hash_password(request.password))
+        
+        if not updates:
+            conn.close()
+            raise HTTPException(status_code=400, detail="No updates provided")
+        
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(email)
+        
+        query = f"UPDATE users SET {', '.join(updates)} WHERE email = ?"
+        cursor.execute(query, params)
+        conn.commit()
+        
+        # Fetch updated user
+        cursor.execute("SELECT email, full_name, created_at FROM users WHERE email = ?", (email,))
+        email, full_name, created_at = cursor.fetchone()
+        conn.close()
+        
+        logger.info(f"✅ User profile updated: {email}")
+        return AuthResponse(
+            success=True,
+            message="Profile updated successfully",
+            user=UserResponse(
+                email=email,
+                full_name=full_name,
+                created_at=created_at
+            )
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update error: {e}")
+        raise HTTPException(status_code=500, detail="Update failed")
+
+@app.get("/auth/user/{email}")
+def get_user(email: str):
+    """Get user information."""
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT email, full_name, created_at FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        email, full_name, created_at = user
+        return UserResponse(
+            email=email,
+            full_name=full_name,
+            created_at=created_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get user error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user")
+
+
 
 @app.get("/health")
 def health():
@@ -357,9 +623,13 @@ async def startup_event():
     logger.info(f"Models: {list(models.keys())}")
     logger.info(f"Label encoding: 0=Safe, 1=Phishing (UNIFIED)")
     logger.info("Endpoints:")
-    logger.info("  POST /predict      - Analyze single URL")
-    logger.info("  POST /predict/batch - Analyze multiple URLs")
-    logger.info("  POST /debug        - Detailed feature analysis")
-    logger.info("  GET  /health       - API health check")
-    logger.info("  GET  /docs         - Swagger documentation")
+    logger.info("  POST /auth/register    - Register new user")
+    logger.info("  POST /auth/login       - Login user")
+    logger.info("  POST /auth/update      - Update user profile")
+    logger.info("  GET  /auth/user/{email} - Get user info")
+    logger.info("  POST /predict          - Analyze single URL")
+    logger.info("  POST /predict/batch    - Analyze multiple URLs")
+    logger.info("  POST /debug            - Detailed feature analysis")
+    logger.info("  GET  /health           - API health check")
+    logger.info("  GET  /docs             - Swagger documentation")
     logger.info("="*60 + "\n")
